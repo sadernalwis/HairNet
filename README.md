@@ -1,5 +1,5 @@
 # Attention:
-HairNet now works in Blender 2.80. 
+HairNet now works in Blender 3.2. 
 
 The buttons for the interface have moved to the Numeric Panel in the 3DView (N-key)
 
