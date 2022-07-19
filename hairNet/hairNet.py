@@ -8,37 +8,27 @@
 # NB 2) All meshes must have the same number of vertices in the direction that corresponds to hair growth
 #---------------------------------------------------
 
-
 import bpy
 import mathutils
 import os
 import traceback
-
-
 from mathutils import Vector
 from bpy.props import *
-
 from . import_properties import  *
-
+from . Utilities.MeshOps.MeshOps import MeshOps as mo
 from pathlib import Path
-
 versionString = "0.6.5"
-
 #Start Debug
-
 hnDebFile = os.path.join(os.path.dirname(__file__), 'hairNetDeb.txt')
 if Path(hnDebFile).is_file():
     print("HN Debug File Exists")
     import sys
     pydev_path = '/Users/rhett/.p2/pool/plugins/org.python.pydev.core_7.7.0.202008021154/pysrc'
-    if sys.path.count(pydev_path) < 1: sys.path.append(pydev_path) 
-    
+    if sys.path.count(pydev_path) < 1: sys.path.append(pydev_path)
     import pydevd
-    
     pydevd.settrace(stdoutToServer=True, stderrToServer=True, suspend=False)
 else:
     print("HN Debug File Doesn't exist")
-    
 #End Debug
 
 class UnionFindList: # a combination of unionfind and singlelinkedlist
@@ -112,26 +102,10 @@ class UnionFindList: # a combination of unionfind and singlelinkedlist
 
 # It is always good to use wrapper prop when attacking to common data block such as Object to reduce blend junk
 class HairNetConfig(PropertyGroup):
-    masterHairSystem: StringProperty(
-        name="hnMasterHairSystem",
-        description="Name of the hair system to be copied by this proxy object.",
-        default="")
-    
-    isHairProxy: BoolProperty(
-            name="hnIsHairProxy",
-            description="Is this object a hair proxy object?",
-            default=False)
-
-    isEmitter: BoolProperty(
-            name="hnIsEmitter",
-            description="Is this object a hair emitter object?",
-            default=False)
-
-    sproutHairs: IntProperty(
-            name="hnSproutHairs",
-            description="Number of additional hairs to add.",
-            default=0)
-
+    masterHairSystem: StringProperty( name="hnMasterHairSystem", description="Name of the hair system to be copied by this proxy object.", default="")
+    isHairProxy: BoolProperty( name="hnIsHairProxy", description="Is this object a hair proxy object?", default=False)
+    isEmitter: BoolProperty( name="hnIsEmitter", description="Is this object a hair emitter object?", default=False)
+    sproutHairs: IntProperty( name="hnSproutHairs", description="Number of additional hairs to add.", default=0)
     # subdivideHairSections: IntProperty(
     #         name="hnSubdivideHairSections",
     #         description="Number of subdivisions to add along the guide hairs",
@@ -154,7 +128,6 @@ def debPrintEdgeKeys(edges):
 def debPrintHairGuides(hairGuides):
     print("Hair Guides:")
     guideN=0
-
     for group in hairGuides:
         print("Guide #",guideN)
         i=0
@@ -189,63 +162,48 @@ def getEdgeFromKey(mesh,key):
 # returns all edge loops that a vertex is part of
 def getLoops(obj, v1, vert_edges, edge_faces, seamEdges):
     debug = False
-
     me = obj.data
-    if not vert_edges:
-        # Create a dictionary with the vert index as key and edge-keys as value
-        #It's a list of verts and the keys are the edges the verts belong to
+    if not vert_edges: # Create a dictionary with the vert index as key and edge-keys as value. It's a list of verts and the keys are the edges the verts belong to
         vert_edges = dict([(v.index, []) for v in me.vertices if v.hide!=1])
         for ed in me.edges:
             for v in ed.key:
                 if ed.key[0] in vert_edges and ed.key[1] in vert_edges:
                     vert_edges[v].append(ed.key)
         if debug: debPrintVertEdges(vert_edges)
-    if not edge_faces:
-        # Create a dictionary with the edge-key as key and faces as value
-        # It's a list of edges and the faces they belong to
+    if not edge_faces: # Create a dictionary with the edge-key as key and faces as value. It's a list of edges and the faces they belong to
         edge_faces = dict([(ed.key, []) for ed in me.edges if (me.vertices[ed.vertices[0]].hide!=1 and me.vertices[ed.vertices[1]].hide!=1)])
         for f in me.polygons:
             for key in f.edge_keys:
                 if key in edge_faces and f.hide!=1:
                     edge_faces[key].append(f.index)
         if debug : debPrintEdgeFaces(edge_faces)
-
     ed_used = [] # starting edges that are already part of a loop that is found
     edgeloops = [] # to store the final results in
     for ed in vert_edges[v1.index]: #ed is all the edges v1 is a part of
-        if ed in ed_used:
-            continue
+        if ed in ed_used: continue
         seamTest = getEdgeFromKey(me, ed)
         if seamTest.use_seam:
             #print("Edge ", seamTest.index, " is a seam")
             continue
-
         vloop = [] # contains all verts of the loop
         poles = [] # contains the poles at the ends of the loop
         circle = False # tells if loop is circular
         n = 0 # to differentiate between the start and the end of the loop
-
         for m in ed: # for each vert in the edge
             n+=1
             active_ed = ed
             active_v  = m
-            if active_v not in vloop:
-                vloop.insert(0,active_v)
-            else:
-                break
+            if active_v not in vloop: vloop.insert(0,active_v)
+            else: break
             stillGrowing = True
             while stillGrowing:
                 stillGrowing = False
                 active_f = edge_faces[active_ed] #List of faces the edge belongs to
                 new_ed = vert_edges[active_v] #list of edges the vert belongs to
-                if len(new_ed)<3: #only 1 or 2 edges
-                    break
+                if len(new_ed)<3: break  #only 1 or 2 edges
                 if len(new_ed)>4: #5-face intersection
-                    # detect poles and stop growing
-                    if n>1:
-                        poles.insert(0,vloop.pop(0))
-                    else:
-                        poles.append(vloop.pop(-1))
+                    if n>1: poles.insert(0,vloop.pop(0)) # detect poles and stop growing
+                    else:   poles.append(vloop.pop(-1))
                     break
                 for i in new_ed: #new_ed - must have 3 or 4 edges coming from the vert
                     eliminate = False # if edge shares face, it has to be eliminated
@@ -256,19 +214,12 @@ def getLoops(obj, v1, vert_edges, edge_faces, seamEdges):
                     if not eliminate: # it's the next edge in the loop
                         stillGrowing = True
                         active_ed = i
-                        if active_ed in vert_edges[v1.index]: #the current edge contains v1
-
-                            ed_used.append(active_ed)
+                        if active_ed in vert_edges[v1.index]: ed_used.append(active_ed)  #the current edge contains v1
                         for k in active_ed:
                             if k != active_v:
                                 if k not in vloop:
-
-                                    if n>1:
-                                        vloop.insert(0,k)
-                                    else:
-                                        vloop.append(k)
-
-
+                                    if n>1: vloop.insert(0,k)
+                                    else:   vloop.append(k)
                                     active_v = k
                                     break
                                 else:
@@ -283,40 +234,6 @@ def getLoops(obj, v1, vert_edges, edge_faces, seamEdges):
             me.vertices[vert].select=True
             #me.edges[edge].select=True
     return edgeloops, vert_edges, edge_faces
-
-
-
-
-def getSeams(obj):
-    debug = False
-    #Make a list of all edges marked as seams
-    error = 0
-    seamEdges = []
-    for edge in obj.data.edges:
-        if edge.use_seam:
-            seamEdges.append(edge)
-
-    #Sort the edges in seamEdges
-#     seamEdges = sortEdges(seamEdges)
-
-    #Make a list of all verts in the seam
-    seamVerts = []
-    for edge in seamEdges:
-        for vert in edge.vertices:
-            if vert not in seamVerts:
-                seamVerts.append(vert)
-
-    if(len(seamEdges) < 2):
-        error = 2
-        return 0, 0, error
-
-    seamVerts = sortSeamVerts(seamVerts, seamEdges)
-    if debug: debPrintSeams(seamVerts, seamEdges)
-
-    if(len(seamEdges) == 0):
-        error = 2
-
-    return seamVerts, seamEdges, error
 
 def getNextVertInEdge(edge, vert):
     if vert == edge.vertices[0]:
@@ -405,92 +322,6 @@ def sortLoop(obj, vloop, v1, seamEdges, vert_edges):
     else:
         loop = vloop[::-1]
     return loop
-
-def sortSeamVerts(verts, edges):
-
-    debug = False
-    sortedVerts = []
-    usedEdges = []
-    triedVerts = []
-    triedEdges = []
-    startingVerts = []
-
-    #Make a list of starting points so that each island will have a starting point. Make another "used edges" list
-
-    def findEndpoint(vert):
-        for thisVert in verts:
-            count = 0
-            if thisVert not in triedVerts:
-                triedVerts.append(thisVert)
-                #get all edges with thisVert in it
-                all_edges = [e for e in edges if thisVert in e.vertices]
-
-                if len(all_edges) == 1:
-                    #The vert is in only one edge and is thus an endpoint
-                    startingVerts.append(thisVert)
-                    #walk to the other end of the seam and add verts to triedVerts
-                    walking = True
-                    thatVert = thisVert
-                    beginEdge = thatEdge = all_edges[0]
-                    while walking:
-                        #get the other vert in the edge
-                        if thatVert == thatEdge.key[0]:
-                            thatVert = thatEdge.key[1]
-                        else:
-                            thatVert = thatEdge.key[0]
-                        #Add current edge to triedEdges
-                        triedEdges.append(thatEdge)
-                        if thatVert not in triedVerts: triedVerts.append(thatVert)
-                        #Put next edge in thatEdge
-                        nextEdge = [e for e in edges if thatVert in e.vertices and e not in triedEdges]
-                        if len(nextEdge) == 1:
-                            #This means one edge was found that wasn't already used
-                            thatEdge = nextEdge[0]
-                        else:
-                            #No unused edges were found
-                            walking = False
-
-    #                 break
-        #at this point, we have found an endpoint
-        if debug:
-            print("seam endpoint", thisVert)
-            print("ending edge", beginEdge.key)
-        #get the edge the vert is in
-        #for thisEdge in edges:
-        return beginEdge, thisVert
-
-    for aVert in verts:
-        if aVert not in triedVerts:
-            thisEdge, thisVert = findEndpoint(aVert)
-
-    #Now, walk through the edges to put the verts in the right order
-
-    for thisVert in startingVerts:
-        thisEdge = [x for x in edges if (thisVert in x.key)][0]
-        sortedVerts.append(thisVert)
-        keepRunning = True
-        while keepRunning:
-            for newVert in thisEdge.key:
-                if debug: print("next vert is #", newVert)
-                if thisVert != newVert:
-                    #we have found the other vert if this edge
-                    #store it and find the next edge
-                    thisVert = newVert
-                    sortedVerts.append(thisVert)
-                    usedEdges.append(thisEdge)
-                    break
-            try:
-                thisEdge = [x for x in edges if ((thisVert in x.key) and (x not in usedEdges))][0]
-            except:
-                keepRunning = False
-            if debug: print("next vert is in edge", thisEdge.key)
-
-
-
-
-    return sortedVerts
-
-
 
 def totalNumberSubdivisions(points, cuts):
     return points + (points - 1)*cuts
@@ -595,7 +426,9 @@ class HAIRNET_OT_operator (bpy.types.Operator):
                 #for hairObj in self.hairObjList:
                 #Identify the seams and their vertices
                 #Start looking here for multiple mesh problems.
-                seamVerts, seamEdges, error = getSeams(thisHairObj)
+                # seamVerts, seamEdges, error = getSeams(thisHairObj)
+                seamVerts, seamEdges, error = mo.seams_VE(thisHairObj)
+
 
                 if(error == 0):
                     vert_edges = edge_faces = False
