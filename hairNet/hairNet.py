@@ -16,6 +16,9 @@ from mathutils import Vector
 from bpy.props import *
 from . import_properties import  *
 from . Utilities.MeshOps.MeshOps import MeshOps as mo
+from . Utilities.ParticleOps.ParticleOps import ParticleOps as po
+from . Utilities.ObjectOps.ObjectOps import ObjectOps as oo
+
 from pathlib import Path
 versionString = "0.6.5"
 #Start Debug
@@ -388,37 +391,15 @@ class HAIRNET_OT_operator (bpy.types.Operator):
             
             sysName = ''.join(["HN", thisHairObj.name])
             options[5] = sysName
-
             if sysName in targetObject.particle_systems:
-                #if this proxy object has an existing hair system on the target object, preserve its current settings
-                if config.masterHairSystem == "":
-                    '''_TS Preserve and out'''
-                    options[0] = targetObject.particle_systems[sysName].settings
-                    options[2] = targetObject.particle_systems[sysName]
-
-                else:
-                    '''TS Delete settings, copy, and out'''
-                    #Store a link to the system settings so we can delete the settings
-                    delSet = targetObject.particle_systems[sysName].settings
-                    #Get active_index of desired particle system
-                    bpy.context.object.particle_systems.active_index = bpy.context.object.particle_systems.find(sysName)
-                    #Delete Particle System
-                    removeParticleSystem(targetObject, targetObject.particle_systems[sysName])
-                    #Delete Particle System Settings
-                    bpy.data.particles.remove(delSet)
-                    #Copy Hair settings from master.
-                    options[0] = bpy.data.particles[config.masterHairSystem].copy()
-
-                    options[2] = makeNewHairSystem(targetObject,sysName)
-            else:
-                #Create a new hair system
-                if config.masterHairSystem != "":
-                    '''T_S copy, create new and out'''
-                    options[0] = bpy.data.particles[config.masterHairSystem].copy()
-#                     options[2] = self.headObj.particle_systems[sysName]
-
-                '''_T_S create new and out'''
-                options[2] = makeNewHairSystem(targetObject,sysName)
+                if config.masterHairSystem == "": # _TS Preserve and out # if this proxy object has an existing hair system on the target object, preserve its current settings
+                    options[0], options[2] = po.particle_setting(targetObject, sysName)
+                else: 
+                    po.particle_delete(targetObject, sysName)
+                    options[0], options[2] = po.settings_copy(config.masterHairSystem), po.hair_system(targetObject, sysName)
+            else: #Create a new hair system
+                if config.masterHairSystem != "":  options[0] = po.settings_copy(config.masterHairSystem)
+                options[2] = po.hair_system(targetObject, sysName)
 
             if (self.meshKind=="SHEET"):
                 if debug: print("Hair sheet "+ thisHairObj.name)
