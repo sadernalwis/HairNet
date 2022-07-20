@@ -8,6 +8,7 @@
 # NB 2) All meshes must have the same number of vertices in the direction that corresponds to hair growth
 #---------------------------------------------------
 
+from Guides import ParticleHairFromGuides, RestoreParticleHairFromMesh, SaveParticleHairToMesh
 import bpy
 import mathutils
 import os
@@ -750,9 +751,7 @@ class HAIRNET_PT_panel(bpy.types.Panel):
 
 
     def draw(self, context):
-
         self.headObj = context.object
-
         #Get a list of hair objects
         self.hairObjList = context.selected_objects
         if self.headObj in self.hairObjList:
@@ -816,46 +815,34 @@ class HAIRNET_PT_view_panel(bpy.types.Panel):
         if object is not None:
             self.drawButtons(self.layout)
             self.drawDetails(self.layout, context)
+        for operator in guide_operators:
+            self.layout.operator(operator.bl_idname)
     
     def drawButtons(self, layout):
         col = layout.box().column(align = True)
-        
         row = col.row(align = True)
         row.label(text="Make Hair")
-        
         row = col.row()
         row.label(text ="Add Hair From:")
-        
         row = col.row(align = True)
         for kind in mesh_kinds:
             row = col.row(align = True)
             row.operator("hairnet.operator", text=kind[1]).meshKind=kind[0]
         
-
     def drawDetails(self, layout, context):
         self.headObj = context.object
-
-
-        #Get a list of hair objects
-        self.hairObjList = context.selected_objects
-        if self.headObj in self.hairObjList:
-            self.hairObjList.remove(self.headObj)
-
+        self.hairObjList = context.selected_objects #Get a list of hair objects
+        if self.headObj in self.hairObjList: self.hairObjList.remove(self.headObj)
         layout = self.layout
-
         row = layout.row()
         #row.label(text = "Objects Start here")
-
         '''Is this a hair object?'''
-
         row = layout.row()
         try:
             row.prop(self.headObj.hn_cfg, 'isEmitter', text = "Emit Hair on Self")
         except:
             pass
-
-        #Draw this if this is a head object
-        if not self.headObj.hn_cfg.isEmitter:
+        if not self.headObj.hn_cfg.isEmitter: #Draw this if this is a head object
             box = layout.box()
             row = box.row()
             row.label(text = "Hair Object:")
@@ -867,31 +854,27 @@ class HAIRNET_PT_view_panel(bpy.types.Panel):
                 row = box.row()
                 row.label(text = "Add Guides:")
                 row.prop(config, 'sproutHairs', text = "SubD")
-#                 row.prop(thisHairObject, 'hnSubdivideHairSections', text = "Subdivide V")
-
-        #Draw this if it's a self-emitter object
-        else:
+                # row.prop(thisHairObject, 'hnSubdivideHairSections', text = "Subdivide V")
+        else: #Draw this if it's a self-emitter object
             box = layout.box()
             try:
                 row = box.row()
                 row.label(text = "Use Settings")
-                
                 row = box.row()
                 row.prop_search(self.headObj.hn_cfg, 'masterHairSystem',  bpy.data, "particles", text = self.headObj.name)
-
             except:
                 pass
             row = box.row()
             row.label(text = "Guide Subdivisions:")
             row.prop(self.headObj.hn_cfg, 'sproutHairs', text = "SubD")
 
-
-
+guide_operators = [ParticleHairFromGuides, SaveParticleHairToMesh, RestoreParticleHairFromMesh]
 classes = (
     HAIRNET_OT_operator, 
     HAIRNET_PT_panel, 
     HAIRNET_PT_view_panel,
     HairNetConfig,
+    *guide_operators
 )
 
 def register():
