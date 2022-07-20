@@ -1,0 +1,2 @@
+class Guides:
+    pass

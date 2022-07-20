@@ -1,7 +1,34 @@
 import logging, bpy, bmesh
+from Utilities.Utilities import Utilities
+from Utilities.ObjectOps.ObjectOps import ObjectOps as oo
 logger = logging.getLogger(__name__)
 
 class MeshOps:
+    def new_mesh(name, matrix=None):
+        mesh = bpy.data.meshes.new(name=name)
+        obj = bpy.data.objects.new(name, mesh)
+        if matrix: obj.matrix_world = matrix
+        bpy.context.scene.collection.objects.link(obj)
+        return obj, mesh
+    
+    def update_VEF(mesh, Vs=[], Es=[], Fs=[]):
+        # mesh = obj.data
+        mesh.from_pydata(Vs, Es, Fs)
+        mesh.update()
+    
+    def select_stems(obj, stems):
+        bpy.ops.object.mode_set(mode='OBJECT')
+        mesh = obj.data
+        root_index = 0
+        for steps in stems:
+            mesh.vertices[root_index].select = True
+            root_index += steps
+        
+    def deselect_Vs(obj):
+        oo.select_and_change_mode(obj, 'EDIT')
+        bpy.ops.mesh.select_mode(type='VERT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+
     def seamed_Es(obj):
         return [e for e in obj.data.edges if e.use_seam]
 

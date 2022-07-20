@@ -1,13 +1,3 @@
-#---------------------------------------------------
-# File HairNet.py
-# Written by Rhett Jackson April 1, 2013
-# Some routines were copied from "Curve Loop" by Crouch https://sites.google.com/site/bartiuscrouch/scripts/curveloop
-# Some routines were copied from other sources
-# Very limited at this time:
-# NB 1) After running the script to create hair, the user MUST manually enter Particle Mode on the Head object and "touch" each point of each hair guide. Using a large comb brish with very low strength is a good way to do this. If it's not done, the hair strands are likely to be reset to a default/straight-out position during editing.
-# NB 2) All meshes must have the same number of vertices in the direction that corresponds to hair growth
-#---------------------------------------------------
-
 from Guides import ParticleHairFromGuides, RestoreParticleHairFromMesh, SaveParticleHairToMesh
 import bpy
 import mathutils
@@ -748,30 +738,20 @@ class HAIRNET_PT_panel(bpy.types.Panel):
     bl_context = "particle"
     bl_label = "HairNet " + versionString
     
-
-
     def draw(self, context):
         self.headObj = context.object
         #Get a list of hair objects
         self.hairObjList = context.selected_objects
-        if self.headObj in self.hairObjList:
-            self.hairObjList.remove(self.headObj)
-
+        if self.headObj in self.hairObjList: self.hairObjList.remove(self.headObj)
         layout = self.layout
-
         row = layout.row()
         row.label(text = "Objects Start here")
-
-        #Is this a hair object?
-
-        row = layout.row()
-        try:
+        row = layout.row() 
+        try: #Is this a hair object?
             row.prop(self.headObj.hn_cfg, 'isEmitter', text = "Emit Hair on Self")
         except:
             pass
-
-        #Draw this if this is a head object
-        if not self.headObj.hn_cfg.isEmitter:
+        if not self.headObj.hn_cfg.isEmitter: #Draw this if this is a head object
             box = layout.box()
             row = box.row()
             row.label(text = "Hair Object:")
@@ -782,23 +762,19 @@ class HAIRNET_PT_panel(bpy.types.Panel):
                 row = box.row()
                 row.label(text = "Guide Subdivisions:")
                 row.prop(thisHairObject.hn_cfg, 'sproutHairs', text = "Subdivide U")
-#                 row.prop(thisHairObject, 'hnSubdivideHairSections', text = "Subdivide V")
-
-        #Draw this if it's a self-emitter object
-        else:
+                # row.prop(thisHairObject, 'hnSubdivideHairSections', text = "Subdivide V")
+        else: #Draw this if it's a self-emitter object
             box = layout.box()
             try:
                 row = box.row()
                 row.label(text = "Master Hair System")
                 row = box.row()
                 row.prop_search(self.headObj.hn_cfg, 'masterHairSystem',  bpy.data, "particles", text = self.headObj.name)
-
             except:
                 pass
             row = box.row()
             row.label(text = "Guide Subdivisions:")
             row.prop(self.headObj.hn_cfg, 'sproutHairs', text = "Subdivide U")
-
 
 class HAIRNET_PT_view_panel(bpy.types.Panel):
     bl_label = "HairNet"
@@ -808,8 +784,7 @@ class HAIRNET_PT_view_panel(bpy.types.Panel):
     bl_category = "Hair"
     bl_context = "objectmode"
     bl_options = {"DEFAULT_CLOSED"}
-    
-    
+
     def draw(self, context):
         object = context.active_object
         if object is not None:
@@ -885,7 +860,18 @@ def register():
 
 def unregister():
     for cls in reversed(classes):
+        print('unregtistering %s', str(cls))
         bpy.utils.unregister_class(cls)
 
 if __name__ == '__main__':
     register()
+
+#---------------------------------------------------
+# File HairNet.py
+# Written by Rhett Jackson April 1, 2013
+# Some routines were copied from "Curve Loop" by Crouch https://sites.google.com/site/bartiuscrouch/scripts/curveloop
+# Some routines were copied from other sources
+# Very limited at this time:
+# NB 1) After running the script to create hair, the user MUST manually enter Particle Mode on the Head object and "touch" each point of each hair guide. Using a large comb brish with very low strength is a good way to do this. If it's not done, the hair strands are likely to be reset to a default/straight-out position during editing.
+# NB 2) All meshes must have the same number of vertices in the direction that corresponds to hair growth
+#---------------------------------------------------
