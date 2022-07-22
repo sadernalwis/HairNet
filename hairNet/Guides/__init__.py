@@ -83,19 +83,23 @@ class ParticleHairFromGuides(bpy.types.Operator):
             return {'CANCELLED'}
         depsgraph = context.evaluated_depsgraph_get()
         dst_obj = context.object
-        inverse_transform = dst_obj.matrix_world.inverted()
-        tmp_objs = []
-        strands = []
-        hair_count = 0
-        hair_steps = None
         dst_obj.select_set(False)
         if len(context.selected_objects) == 0:
             self.report({'WARNING'}, 'No source objects selected')
             return {'CANCELLED'}
-        for src_obj in context.selected_objects:
+        obj_names = [selected_obj.name for selected_obj in context.selected_objects]
+
+        tmp_objs = []
+        strands = []
+        hair_count = 0
+        hair_steps = None
+        inverse_transform = dst_obj.matrix_world.inverted()
+        objs = oo.get_objects(*obj_names)
+        for src_obj in objs:
             if src_obj.type == 'CURVE' or src_obj.type == 'SURFACE':
                 indices = []
                 vertex_index = 0
+
                 if src_obj.type == 'CURVE':
                     if src_obj.data.bevel_depth == 0.0 and src_obj.data.extrude == 0.0:
                         self.report({'WARNING'}, 'Curve must have extrude or bevel depth')
@@ -119,24 +123,28 @@ class ParticleHairFromGuides(bpy.types.Operator):
                             vertex_index += 2*resolution_v
                             indices.append((vertex_index, resolution_u-1, 1))
                             vertex_index += resolution_u*resolution_v
+
                 elif src_obj.type == 'SURFACE':
                     for spline in src_obj.data.splines:
                         resolution_u = spline.resolution_u*spline.point_count_u
                         resolution_v = spline.resolution_v*spline.point_count_v
                         indices.append((vertex_index, resolution_u-1, resolution_v))
                         vertex_index += resolution_u*resolution_v
+
                 bpy.ops.object.select_all(action='DESELECT')
                 src_modifiers = []
                 for src_modifier in src_obj.modifiers.values():
                     if src_modifier.show_viewport:
                         src_modifiers.append(src_modifier)
                         src_modifier.show_viewport = False
+
                 src_obj.select_set(True)
                 bpy.context.view_layer.objects.active = src_obj
                 bpy.ops.object.convert(target='MESH', keep_original=True)
                 src_obj.hide_viewport = True
                 src_obj = context.object
                 tmp_objs.append(src_obj)
+                
                 for src_modifier in src_modifiers:
                     src_modifier.show_viewport = True
                     dst_modifier = src_obj.modifiers.new(name=src_modifier.name, type=src_modifier.type)

@@ -5,6 +5,9 @@ from Utilities.Utilities import Utilities
 logger = logging.getLogger(__name__)
 
 class ObjectOps:
+    def get_object_by_name(name):
+        return bpy.data.objects.get(name)
+
     def get_objects(*names):
         return [bpy.data.objects.get(name) for name in names]
     
@@ -25,9 +28,6 @@ class ObjectOps:
 
     def deselect_all_objects():
         for obj in bpy.data.objects: obj.select_set(False)
-
-    def get_object_by_name(name):
-        return bpy.data.objects.get(name)
 
     def is_object(obj):
         return isinstance(obj, bpy.types.Object)
@@ -93,6 +93,18 @@ class ObjectOps:
         if particle_system: retval[2] = retval[1].particle_system
         return retval
         
+    def safe_remove(obj):
+        try:
+            collections = obj.users_collection
+            for c in collections: c.objects.unlink(obj)
+            if(obj.data.users == 1):
+                if(obj.type == 'MESH'): bpy.data.meshes.remove(obj.data)
+                elif(obj.type == 'CURVE'): bpy.data.curves.remove(obj.data)
+                #else? TODO
+            bpy.data.objects.remove(obj)
+        except:
+            pass
+
 # MB-Lab
 #
 # MB-Lab fork website : https://github.com/animate1978/MB-Lab

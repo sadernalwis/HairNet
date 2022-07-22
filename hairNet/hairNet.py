@@ -1,3 +1,4 @@
+from Curves.Coil.Coil import QuatOperator
 from Guides import ParticleHairFromGuides, RestoreParticleHairFromMesh, SaveParticleHairToMesh
 import bpy
 import mathutils
@@ -787,6 +788,7 @@ class HAIRNET_PT_view_panel(bpy.types.Panel):
 
     def draw(self, context):
         object = context.active_object
+        self.layout.operator(QuatOperator.bl_idname, text="Add Coil Curve", icon = "PLUGIN")
         if object is not None:
             self.drawButtons(self.layout)
             self.drawDetails(self.layout, context)
@@ -844,24 +846,33 @@ class HAIRNET_PT_view_panel(bpy.types.Panel):
             row.prop(self.headObj.hn_cfg, 'sproutHairs', text = "SubD")
 
 guide_operators = [ParticleHairFromGuides, SaveParticleHairToMesh, RestoreParticleHairFromMesh]
+curve_operators = [QuatOperator]
 classes = (
     HAIRNET_OT_operator, 
     HAIRNET_PT_panel, 
     HAIRNET_PT_view_panel,
     HairNetConfig,
-    *guide_operators
+    *guide_operators,
+    *curve_operators
 )
 
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+def menu_func(self, context):
+    self.layout.operator(QuatOperator.bl_idname, text="Add Coil Curve", icon = "PLUGIN")
+
+def unregister():
+    bpy.utils.unregister_class(QuatOperator)
     
+
+def register():
+    for cls in classes: bpy.utils.register_class(cls)
     bpy.types.Object.hn_cfg=PointerProperty(type=HairNetConfig)
+    # bpy.types.VIEW3D_MT_add.append(menu_func)
 
 def unregister():
     for cls in reversed(classes):
         print('unregtistering %s', str(cls))
         bpy.utils.unregister_class(cls)
+    # bpy.types.VIEW3D_MT_add.remove(menu_func)
 
 if __name__ == '__main__':
     register()
