@@ -8,7 +8,7 @@ bl_info = {
     "name": "Coil Curve Gen",
     "author": "Phil Cote, cotejrp1",
     "version": (0, 0, 1),
-    "blender": (2, 6, 3),
+    "blender": (3, 2, 0),
     "location": "View3D > Add > Curve",
     "description": "Add a coiled bezier curve to the scene.",
     "warning": "",
