@@ -1,6 +1,8 @@
 # Attention:
 HairNet now works in Blender 3.2+
 
+https://user-images.githubusercontent.com/44372160/180462131-2e436072-24ea-42d3-9b49-1e481cbe234b.mp4
+
 The buttons for the interface have moved to the Numeric Panel in the 3DView (N-key)
 
 HairNet for 2.79 still works.
@@ -28,5 +30,8 @@ https://blenderartists.org/t/hair-guides-created-from-mesh-objects/572642
 Installation:
 Visit the "Releases" page and download version 0.5.1.
 https://github.com/Jandals/HairNet/releases
+
+
+
 
 Then use Blender's "User Preferences" window to "Install Addon From File." Choose the ZIP file you just downloaded and that should be all.
