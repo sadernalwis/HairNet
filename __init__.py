@@ -11,6 +11,11 @@ bl_info = {
         }
 
 
+import bpy, subprocess, sys, os
+import threading, time, string
+pybin = sys.executable#
+sys.path.append(os.getcwd())
+
 if "bpy" in locals():
     import importlib
     importlib.reload(hairNet)
