@@ -16,13 +16,13 @@ import threading, time, string
 pybin = sys.executable#
 sys.path.append(os.getcwd())
 
-if "bpy" in locals():
-    import importlib
-    importlib.reload(hairNet)
-    importlib.reload(import_properties)
-else:
-    from . import hairNet
-    from . import import_properties
+# if "bpy" in locals():
+#     import importlib
+#     importlib.reload(hairNet)
+#     importlib.reload(import_properties)
+# else:
+from . import hairNet
+from . import import_properties
 
 import bpy
 
