@@ -1,5 +1,5 @@
-from Curves.Coil.Coil import QuatOperator
-from Guides import ParticleHairFromGuides, RestoreParticleHairFromMesh, SaveParticleHairToMesh
+from . Curves.Coil.Coil import QuatOperator
+from . Guides import ParticleHairFromGuides, RestoreParticleHairFromMesh, SaveParticleHairToMesh
 import bpy
 import mathutils
 import os
