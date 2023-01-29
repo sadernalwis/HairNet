@@ -13,9 +13,9 @@ import bpy, bmesh, math
 import mathutils, random
 from bpy_extras import mesh_utils
 from mathutils import Vector
-from Utilities.MeshOps.MeshOps import MeshOps as mo
-from Utilities.ObjectOps.ObjectOps import ObjectOps as oo
-from Utilities.ParticleOps.ParticleOps import ParticleOps as po
+from .. Utilities.MeshOps.MeshOps import MeshOps as mo
+from .. Utilities.ObjectOps.ObjectOps import ObjectOps as oo
+from .. Utilities.ParticleOps.ParticleOps import ParticleOps as po
 
 def bisectLowerBound(key_index, a, x, low, high):
     while low < high:

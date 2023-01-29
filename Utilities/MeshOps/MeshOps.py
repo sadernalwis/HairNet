@@ -1,6 +1,6 @@
-import logging, bpy, bmesh
-from Utilities.Utilities import Utilities
-from Utilities.ObjectOps.ObjectOps import ObjectOps as oo
+import logging, bpy, bmesh, sys, os
+from ...Utilities.Utilities import Utilities
+from ...Utilities.ObjectOps.ObjectOps import ObjectOps as oo
 logger = logging.getLogger(__name__)
 
 class MeshOps:

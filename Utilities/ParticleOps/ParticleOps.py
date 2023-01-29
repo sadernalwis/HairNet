@@ -1,7 +1,7 @@
 import bpy
 
-from Utilities.MeshOps.MeshOps import MeshOps as mo
-from Utilities.ObjectOps.ObjectOps import ObjectOps as oo
+from ...Utilities.MeshOps.MeshOps import MeshOps as mo
+from ...Utilities.ObjectOps.ObjectOps import ObjectOps as oo
 
 class ParticleOps:
     

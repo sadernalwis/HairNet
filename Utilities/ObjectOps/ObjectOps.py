@@ -1,7 +1,7 @@
 import logging, numpy as np, bpy, mathutils, math
 from math import cos, degrees, radians, sin
 from mathutils import Vector, Matrix
-from Utilities.Utilities import Utilities
+from ...Utilities.Utilities import Utilities
 logger = logging.getLogger(__name__)
 
 class ObjectOps:
